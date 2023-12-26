@@ -15,7 +15,8 @@ export async function run(): Promise<void> {
 
     const pullRequests = await octokit.rest.pulls.list({
       ...github.context.repo,
-      base: latestRelease.data.target_commitish,
+      base: 'dev',
+      head: latestRelease.data.target_commitish,
       state: 'closed'
     })
     console.log(`${pullRequests.data.length} found`)
@@ -31,7 +32,6 @@ export async function run(): Promise<void> {
           const linearComment = comments.data.find(
             c => c.performed_via_github_app?.name === 'Linear'
           )
-          console.log(JSON.stringify(linearComment?.body))
           const ticket = linearComment?.body?.match(/\bRAY-\d+\b/)
           return ticket?.[0]
         })

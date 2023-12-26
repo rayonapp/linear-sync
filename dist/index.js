@@ -28949,7 +28949,8 @@ async function run() {
         console.log('latest release', latestRelease.data.name);
         const pullRequests = await octokit.rest.pulls.list({
             ...github.context.repo,
-            base: latestRelease.data.target_commitish,
+            base: 'dev',
+            head: latestRelease.data.target_commitish,
             state: 'closed'
         });
         console.log(`${pullRequests.data.length} found`);
@@ -28960,7 +28961,6 @@ async function run() {
                 issue_number: pr.number
             });
             const linearComment = comments.data.find(c => c.performed_via_github_app?.name === 'Linear');
-            console.log(JSON.stringify(linearComment?.body));
             const ticket = linearComment?.body?.match(/\bRAY-\d+\b/);
             return ticket?.[0];
         }))).filter(Boolean);
