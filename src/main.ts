@@ -20,6 +20,7 @@ export async function run(): Promise<void> {
     const linearTickets = await Promise.all(
       pullRequests.data
         .map(async pr => {
+          core.debug(`${pr.title} found`)
           const comments = await octokit.rest.issues.listComments({
             ...github.context.repo,
             issue_number: pr.number
