@@ -6,7 +6,6 @@ export async function run(): Promise<void> {
     const mainBranch: string = core.getInput('mainBranch') ?? 'dev'
     const token: string = core.getInput('token')
 
-    console.log('hey')
     const octokit = github.getOctokit(token)
     const latestRelease = await octokit.rest.repos.getLatestRelease({
       ...github.context.repo
@@ -17,12 +16,12 @@ export async function run(): Promise<void> {
       base: latestRelease.data.target_commitish,
       head: mainBranch
     })
-    core.debug(`${pullRequests} found`)
+    console.log(`${pullRequests} found`)
 
     const linearTickets = await Promise.all(
       pullRequests.data
         .map(async pr => {
-          core.debug(`${pr.title} found`)
+          console.log(`${pr.title} found`)
           const comments = await octokit.rest.issues.listComments({
             ...github.context.repo,
             issue_number: pr.number
@@ -37,7 +36,7 @@ export async function run(): Promise<void> {
         .filter(Boolean)
     )
 
-    core.debug(`Tickets found ${linearTickets.join()}`)
+    console.log(`Tickets found ${linearTickets.join()}`)
   } catch (error) {
     // Fail the workflow run if an error occurs
     if (error instanceof Error) core.setFailed(error.message)
