@@ -3,7 +3,7 @@ import * as github from '@actions/github'
 
 export async function run(): Promise<void> {
   try {
-    // const mainBranch: string = core.getInput('mainBranch') ?? 'dev'
+    const mainBranch: string = core.getInput('mainBranch') ?? 'dev'
     const token: string = core.getInput('token')
 
     const octokit = github.getOctokit(token)
@@ -13,9 +13,16 @@ export async function run(): Promise<void> {
 
     console.log('latest release', latestRelease.data.name)
 
+    const toSha = (
+      await octokit.rest.repos.getBranch({
+        ...github.context.repo,
+        branch: mainBranch
+      })
+    ).data.commit.sha
+
     const pullRequests = await octokit.rest.pulls.list({
       ...github.context.repo,
-      base: 'dev',
+      base: toSha,
       head: latestRelease.data.target_commitish,
       state: 'closed'
     })

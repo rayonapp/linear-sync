@@ -28940,16 +28940,20 @@ const core = __importStar(__nccwpck_require__(9093));
 const github = __importStar(__nccwpck_require__(5942));
 async function run() {
     try {
-        // const mainBranch: string = core.getInput('mainBranch') ?? 'dev'
+        const mainBranch = core.getInput('mainBranch') ?? 'dev';
         const token = core.getInput('token');
         const octokit = github.getOctokit(token);
         const latestRelease = await octokit.rest.repos.getLatestRelease({
             ...github.context.repo
         });
         console.log('latest release', latestRelease.data.name);
+        const toSha = (await octokit.rest.repos.getBranch({
+            ...github.context.repo,
+            branch: mainBranch
+        })).data.commit.sha;
         const pullRequests = await octokit.rest.pulls.list({
             ...github.context.repo,
-            base: 'dev',
+            base: toSha,
             head: latestRelease.data.target_commitish,
             state: 'closed'
         });
