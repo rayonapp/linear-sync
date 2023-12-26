@@ -34,7 +34,7 @@ export async function run(): Promise<void> {
           )
           console.log(JSON.stringify(linearComment?.body))
           const ticket = linearComment?.body?.match(/\bRAY-\d+\b/)
-          return ticket?.[0].match // eslint-disable-line @typescript-eslint/unbound-method
+          return ticket?.[0]
         })
         .filter(Boolean)
     )

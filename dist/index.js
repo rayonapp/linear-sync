@@ -28964,7 +28964,7 @@ async function run() {
             const linearComment = comments.data.find(c => c.performed_via_github_app?.name === 'Linear');
             console.log(JSON.stringify(linearComment?.body));
             const ticket = linearComment?.body?.match(/\bRAY-\d+\b/);
-            return ticket?.[0].match; // eslint-disable-line @typescript-eslint/unbound-method
+            return ticket?.[0];
         })
             .filter(Boolean));
         console.log(`Tickets found ${linearTickets.join()}`);
