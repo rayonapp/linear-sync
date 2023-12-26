@@ -17,7 +17,7 @@ export async function run(): Promise<void> {
       ...github.context.repo,
       base: latestRelease.data.target_commitish,
       head: mainBranch,
-      state: 'closed'
+      state: 'closed',
     })
     console.log(`${pullRequests.data.length} found`)
 
@@ -31,7 +31,7 @@ export async function run(): Promise<void> {
           })
           const linearComment = comments.data.find(c => {
             console.log(
-              `Comment by ${c.performed_via_github_app ?? c.user?.name}`
+              `Comment by ${c.performed_via_github_app?.name ?? c.user?.name}`
             )
             return c.performed_via_github_app?.name === 'linear'
           })
