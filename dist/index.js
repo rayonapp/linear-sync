@@ -28946,6 +28946,7 @@ async function run() {
         const latestRelease = await octokit.rest.repos.getLatestRelease({
             ...github.context.repo
         });
+        console.log('latest release', latestRelease.data.name);
         const pullRequests = await octokit.rest.pulls.list({
             ...github.context.repo,
             base: latestRelease.data.target_commitish,
@@ -28955,13 +28956,13 @@ async function run() {
         console.log(`${pullRequests.data.length} found`);
         const linearTickets = await Promise.all(pullRequests.data
             .map(async (pr) => {
-            console.log(`${pr.title} found`);
+            console.log(`${pr.title} PR found`);
             const comments = await octokit.rest.issues.listComments({
                 ...github.context.repo,
                 issue_number: pr.number
             });
             const linearComment = comments.data.find(c => {
-                console.log(`Comment by ${c.performed_via_github_app}`);
+                console.log(`Comment by ${c.performed_via_github_app ?? c.user?.name}`);
                 return c.performed_via_github_app?.name === 'linear';
             });
             console.log(JSON.stringify(linearComment?.body));
