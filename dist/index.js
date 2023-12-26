@@ -28942,7 +28942,6 @@ async function run() {
     try {
         const mainBranch = core.getInput('mainBranch') ?? 'dev';
         const token = core.getInput('token');
-        console.log('hey');
         const octokit = github.getOctokit(token);
         const latestRelease = await octokit.rest.repos.getLatestRelease({
             ...github.context.repo
@@ -28952,10 +28951,10 @@ async function run() {
             base: latestRelease.data.target_commitish,
             head: mainBranch
         });
-        core.debug(`${pullRequests} found`);
+        console.log(`${pullRequests} found`);
         const linearTickets = await Promise.all(pullRequests.data
             .map(async (pr) => {
-            core.debug(`${pr.title} found`);
+            console.log(`${pr.title} found`);
             const comments = await octokit.rest.issues.listComments({
                 ...github.context.repo,
                 issue_number: pr.number
@@ -28968,7 +28967,7 @@ async function run() {
             return ticket?.[0].match; // eslint-disable-line @typescript-eslint/unbound-method
         })
             .filter(Boolean));
-        core.debug(`Tickets found ${linearTickets.join()}`);
+        console.log(`Tickets found ${linearTickets.join()}`);
     }
     catch (error) {
         // Fail the workflow run if an error occurs
