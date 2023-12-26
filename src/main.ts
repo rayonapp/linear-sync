@@ -15,7 +15,7 @@ export async function run(): Promise<void> {
     const pullRequests = await octokit.rest.pulls.list({
       ...github.context.repo,
       base: latestRelease.data.target_commitish,
-      head: mainBranch,
+      head: mainBranch
     })
     core.debug(`${pullRequests} found`)
 

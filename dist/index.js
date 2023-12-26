@@ -28942,6 +28942,7 @@ async function run() {
     try {
         const mainBranch = core.getInput('mainBranch') ?? 'dev';
         const token = core.getInput('token');
+        console.log('hey');
         const octokit = github.getOctokit(token);
         const latestRelease = await octokit.rest.repos.getLatestRelease({
             ...github.context.repo
@@ -28949,9 +28950,9 @@ async function run() {
         const pullRequests = await octokit.rest.pulls.list({
             ...github.context.repo,
             base: latestRelease.data.target_commitish,
-            head: mainBranch,
-            state: 'closed'
+            head: mainBranch
         });
+        core.debug(`${pullRequests} found`);
         const linearTickets = await Promise.all(pullRequests.data
             .map(async (pr) => {
             core.debug(`${pr.title} found`);
