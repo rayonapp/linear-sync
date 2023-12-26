@@ -28949,13 +28949,12 @@ async function run() {
         console.log('latest release', latestRelease.data.name);
         const pullRequests = await octokit.rest.pulls.list({
             ...github.context.repo,
-            base: latestRelease.data.target_commitish,
-            head: mainBranch,
+            base: mainBranch,
+            head: latestRelease.data.target_commitish,
             state: 'closed'
         });
         console.log(`${pullRequests.data.length} found`);
-        const linearTickets = await Promise.all(pullRequests.data
-            .map(async (pr) => {
+        const linearTickets = (await Promise.all(pullRequests.data.map(async (pr) => {
             console.log(`${pr.title} PR found`);
             const comments = await octokit.rest.issues.listComments({
                 ...github.context.repo,
@@ -28965,8 +28964,7 @@ async function run() {
             console.log(JSON.stringify(linearComment?.body));
             const ticket = linearComment?.body?.match(/\bRAY-\d+\b/);
             return ticket?.[0];
-        })
-            .filter(Boolean));
+        }))).filter(Boolean);
         console.log(`Tickets found ${linearTickets.join()}`);
     }
     catch (error) {
