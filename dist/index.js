@@ -28961,10 +28961,7 @@ async function run() {
                 ...github.context.repo,
                 issue_number: pr.number
             });
-            const linearComment = comments.data.find(c => {
-                console.log(`Comment by ${c.performed_via_github_app?.name ?? c.user?.name}`);
-                return c.performed_via_github_app?.name === 'linear';
-            });
+            const linearComment = comments.data.find(c => c.performed_via_github_app?.name === 'Linear');
             console.log(JSON.stringify(linearComment?.body));
             const ticket = linearComment?.body?.match(/\bRAY-\d+\b/);
             return ticket?.[0].match; // eslint-disable-line @typescript-eslint/unbound-method
