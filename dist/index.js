@@ -28940,7 +28940,6 @@ const core = __importStar(__nccwpck_require__(9093));
 const github = __importStar(__nccwpck_require__(5942));
 async function run() {
     try {
-        core.error('test');
         const mainBranch = core.getInput('mainBranch') ?? 'dev';
         const token = core.getInput('token');
         const octokit = github.getOctokit(token);
