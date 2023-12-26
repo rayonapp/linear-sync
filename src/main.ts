@@ -3,6 +3,7 @@ import * as github from '@actions/github'
 
 export async function run(): Promise<void> {
   try {
+    core.error('test')
     const mainBranch: string = core.getInput('mainBranch') ?? 'dev'
     const token: string = core.getInput('token')
 
