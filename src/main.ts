@@ -6,6 +6,7 @@ export async function run(): Promise<void> {
     const mainBranch: string = core.getInput('mainBranch') ?? 'dev'
     const token: string = core.getInput('token')
 
+    console.log('hey')
     const octokit = github.getOctokit(token)
     const latestRelease = await octokit.rest.repos.getLatestRelease({
       ...github.context.repo
@@ -15,8 +16,9 @@ export async function run(): Promise<void> {
       ...github.context.repo,
       base: latestRelease.data.target_commitish,
       head: mainBranch,
-      state: 'closed'
     })
+    core.debug(`${pullRequests} found`)
+
     const linearTickets = await Promise.all(
       pullRequests.data
         .map(async pr => {
