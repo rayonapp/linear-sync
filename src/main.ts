@@ -1,24 +1,36 @@
 import * as core from '@actions/core'
-import { wait } from './wait'
+import * as github from '@actions/github'
 
-/**
- * The main function for the action.
- * @returns {Promise<void>} Resolves when the action is complete.
- */
+
 export async function run(): Promise<void> {
   try {
-    const ms: string = core.getInput('milliseconds')
+    const mainBranch: string = core.getInput('mainBranch') ?? 'dev'
+    const token: string = core.getInput('token')
 
-    // Debug logs are only output if the `ACTIONS_STEP_DEBUG` secret is true
-    core.debug(`Waiting ${ms} milliseconds ...`)
+    const octokit = github.getOctokit(token)
+    const latestRelease = await octokit.rest.repos.getLatestRelease({ ...github.context.repo,  })
 
-    // Log the current timestamp, wait, then log the new timestamp
-    core.debug(new Date().toTimeString())
-    await wait(parseInt(ms, 10))
-    core.debug(new Date().toTimeString())
+    const pullRequests = await octokit.rest.pulls.list({
+      ...github.context.repo,
+      base: latestRelease.data.target_commitish,
+      head: mainBranch,
+      state: 'closed',
+    });
+    const linearTickets = await Promise.all(pullRequests.data.map(async pr => {
+      const comments = await octokit.rest.issues.listComments({
+        ...github.context.repo,
+        issue_number: pr.number,
+      });
+      const linearComment = comments.data.find(c => {
+        core.debug(`Comment by ${c.performed_via_github_app}`)
+        return c.performed_via_github_app?.name === 'linear'
+      })
+      const ticket = linearComment?.body?.match(/\bRAY-\d+\b/)
+      return ticket?.[0].match
+    }).filter(Boolean))
 
-    // Set outputs for other workflow steps to use
-    core.setOutput('time', new Date().toTimeString())
+    core.debug(`Tickets found ${linearTickets.join()}`)
+
   } catch (error) {
     // Fail the workflow run if an error occurs
     if (error instanceof Error) core.setFailed(error.message)
