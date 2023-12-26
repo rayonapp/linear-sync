@@ -13,12 +13,13 @@ export async function run(): Promise<void> {
 
     console.log('latest release', latestRelease.data.name)
 
-    const toSha = (
-      await octokit.rest.repos.getBranch({
-        ...github.context.repo,
-        branch: mainBranch
-      })
-    ).data.commit.sha
+    const mainBranchRes = await octokit.rest.repos.getBranch({
+      ...github.context.repo,
+      branch: mainBranch
+    })
+
+    console.log(JSON.stringify(mainBranchRes.data))
+    const toSha = mainBranchRes.data.commit.sha
 
     const pullRequests = await octokit.rest.pulls.list({
       ...github.context.repo,

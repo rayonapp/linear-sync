@@ -28947,10 +28947,12 @@ async function run() {
             ...github.context.repo
         });
         console.log('latest release', latestRelease.data.name);
-        const toSha = (await octokit.rest.repos.getBranch({
+        const mainBranchRes = await octokit.rest.repos.getBranch({
             ...github.context.repo,
             branch: mainBranch
-        })).data.commit.sha;
+        });
+        console.log(JSON.stringify(mainBranchRes.data));
+        const toSha = mainBranchRes.data.commit.sha;
         const pullRequests = await octokit.rest.pulls.list({
             ...github.context.repo,
             base: toSha,
