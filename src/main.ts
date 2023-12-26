@@ -3,7 +3,7 @@ import * as github from '@actions/github'
 
 export async function run(): Promise<void> {
   try {
-   // const mainBranch: string = core.getInput('mainBranch') ?? 'dev'
+    // const mainBranch: string = core.getInput('mainBranch') ?? 'dev'
     const token: string = core.getInput('token')
 
     const octokit = github.getOctokit(token)
