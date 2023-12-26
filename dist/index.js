@@ -28940,6 +28940,7 @@ const core = __importStar(__nccwpck_require__(9093));
 const github = __importStar(__nccwpck_require__(5942));
 async function run() {
     try {
+        core.error('test');
         const mainBranch = core.getInput('mainBranch') ?? 'dev';
         const token = core.getInput('token');
         const octokit = github.getOctokit(token);
@@ -28954,6 +28955,7 @@ async function run() {
         });
         const linearTickets = await Promise.all(pullRequests.data
             .map(async (pr) => {
+            core.debug(`${pr.title} found`);
             const comments = await octokit.rest.issues.listComments({
                 ...github.context.repo,
                 issue_number: pr.number
