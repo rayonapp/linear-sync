@@ -11,13 +11,14 @@ export async function run(): Promise<void> {
     const linearClient = new LinearClient({ apiKey })
 
     const octokit = github.getOctokit(token)
+
+    console.log('Getting Latest release...')
     const latestRelease = await octokit.rest.repos.getLatestRelease({
       ...github.context.repo
     })
+    console.log('Latest release found:', latestRelease.data.name)
 
-    console.log('latest release', latestRelease.data.name)
-
-    // Fetch pull requests between the latest release and the latest commit on the main branch
+    console.log('Getting pull requests...')
     const pullRequests = await octokit.rest.pulls.list({
       ...github.context.repo,
       base: 'dev',
@@ -26,19 +27,17 @@ export async function run(): Promise<void> {
       direction: 'desc',
       per_page: 100 // Adjust as needed
     })
-
-    // Filter pull requests that were merged between the specified commits
     const mergedPRs = pullRequests.data.filter(
       pr =>
         pr.merged_at && pr.merged_at >= (latestRelease?.data?.published_at ?? 0)
     )
 
-    console.log(`${mergedPRs.length} found`)
+    console.log(`${mergedPRs.length} merged since last release`)
 
     const linearTickets = (
       await Promise.all(
         mergedPRs.map(async pr => {
-          console.log(`${pr.title} PR found`)
+          console.log(`Getting comment from PR #${pr.number}`)
           const comments = await octokit.rest.issues.listComments({
             ...github.context.repo,
             issue_number: Number(pr.number)
@@ -47,13 +46,15 @@ export async function run(): Promise<void> {
             c => c.performed_via_github_app?.name === 'Linear'
           )
           const ticket = linearComment?.body?.match(/\bRAY-\d+\b/)
+          if (ticket) {
+            console.log(`Found ticket ${ticket}`)
+          }
           return ticket?.[0]
         })
       )
-    ).filter(Boolean) as string[]
+    ).filter((t): t is string => Boolean(t))
 
-    console.log(`Tickets found ${linearTickets.join()}`)
-
+    console.log('Getting Releases label')
     const labels = await linearClient.issueLabels({
       filter: { name: { eq: 'Releases' } }
     })
@@ -70,12 +71,16 @@ export async function run(): Promise<void> {
     const releaseLabel = await (
       await linearClient.createIssueLabel({ name: releaseLabelName, parentId })
     ).issueLabel
-    console.log(releaseLabel?.id)
     for (const ref of linearTickets) {
-      const ticket = await linearClient.issue(ref)
-      await ticket.update({
-        labelIds: [releaseLabel!.id, ...ticket.labelIds].filter(Boolean)
-      })
+      try {
+        console.log(`Updating ticket ${ref}`)
+        const ticket = await linearClient.issue(ref)
+        await ticket.update({
+          labelIds: [releaseLabel!.id, ...ticket.labelIds].filter(Boolean)
+        })
+      } catch (e) {
+        console.error(e)
+      }
     }
   } catch (error) {
     // Fail the workflow run if an error occurs
