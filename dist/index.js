@@ -28951,6 +28951,7 @@ async function run() {
             ...github.context.repo,
             branch: mainBranch
         });
+        console.log(JSON.stringify(mainBranchRes.data));
         const toSha = // eslint-disable-next-line @typescript-eslint/no-explicit-any
          mainBranchRes.data
             ?.commit.sha;

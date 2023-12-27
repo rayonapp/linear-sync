@@ -18,6 +18,7 @@ export async function run(): Promise<void> {
       branch: mainBranch
     })
 
+    console.log(JSON.stringify(mainBranchRes.data))
     const toSha = // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (mainBranchRes.data as any[0] as unknown as typeof mainBranchRes.data)
         ?.commit.sha
