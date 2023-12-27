@@ -28996,7 +28996,7 @@ async function run() {
         for (const ref of linearTickets) {
             const ticket = await linearClient.issue(ref);
             await ticket.update({
-                labelIds: [...releaseLabel.id, ...ticket.labelIds]
+                labelIds: [...releaseLabel.id, ...ticket.labelIds].filter(Boolean)
             });
         }
     }
