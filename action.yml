@@ -11,6 +11,9 @@ inputs:
   linearApiKey:
     description: 'Linear API key'
     required: true
+  releaseLabel:
+    description: 'Release label pu in linear'
+    required: true
 
 
 

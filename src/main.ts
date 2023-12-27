@@ -6,6 +6,7 @@ export async function run(): Promise<void> {
   try {
     const token: string = core.getInput('token')
     const apiKey: string = core.getInput('linearApiKey')
+    const releaseLabelName: string = core.getInput('releaseLabel')
 
     const linearClient = new LinearClient({ apiKey })
 
@@ -67,7 +68,7 @@ export async function run(): Promise<void> {
     }
     console.log('Creating new version label...')
     const releaseLabel = await (
-      await linearClient.createIssueLabel({ name: 'v1.0.0', parentId })
+      await linearClient.createIssueLabel({ name: releaseLabelName, parentId })
     ).issueLabel
     console.log(releaseLabel?.id)
     for (const ref of linearTickets) {

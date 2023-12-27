@@ -28953,6 +28953,7 @@ async function run() {
     try {
         const token = core.getInput('token');
         const apiKey = core.getInput('linearApiKey');
+        const releaseLabelName = core.getInput('releaseLabel');
         const linearClient = new sdk_1.LinearClient({ apiKey });
         const octokit = github.getOctokit(token);
         const latestRelease = await octokit.rest.repos.getLatestRelease({
@@ -28991,7 +28992,7 @@ async function run() {
             parentId = (await (await linearClient.createIssueLabel({ name: 'Releases' })).issueLabel)?.id;
         }
         console.log('Creating new version label...');
-        const releaseLabel = await (await linearClient.createIssueLabel({ name: 'v1.0.0', parentId })).issueLabel;
+        const releaseLabel = await (await linearClient.createIssueLabel({ name: releaseLabelName, parentId })).issueLabel;
         console.log(releaseLabel?.id);
         for (const ref of linearTickets) {
             const ticket = await linearClient.issue(ref);
