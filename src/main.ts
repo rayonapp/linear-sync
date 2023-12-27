@@ -15,7 +15,7 @@ export async function run(): Promise<void> {
     // Fetch pull requests between the latest release and the latest commit on the main branch
     const pullRequests = await octokit.rest.pulls.list({
       ...github.context.repo,
-      base: 'main',
+      base: 'dev',
       state: 'closed',
       sort: 'updated',
       direction: 'desc',
