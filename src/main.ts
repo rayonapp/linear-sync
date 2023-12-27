@@ -72,6 +72,10 @@ export async function run(): Promise<void> {
     console.log(releaseLabel?.id)
     for (const ref of linearTickets) {
       const ticket = await linearClient.issue(ref)
+      console.log(
+        [...releaseLabel!.id, ...ticket.labelIds].filter(Boolean),
+        ticket
+      )
       await ticket.update({
         labelIds: [...releaseLabel!.id, ...ticket.labelIds].filter(Boolean)
       })
