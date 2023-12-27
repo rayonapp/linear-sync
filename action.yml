@@ -8,6 +8,9 @@ inputs:
   token:
     description: 'Github token'
     required: true
+  linearApiKey:
+    description: 'Linear API key'
+    required: true
 
 
 
