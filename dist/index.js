@@ -28992,6 +28992,7 @@ async function run() {
         }
         console.log('Creating new version label...');
         const releaseLabel = await (await linearClient.createIssueLabel({ name: 'v1.0.0', parentId })).issueLabel;
+        console.log(releaseLabel?.id);
         for (const ref of linearTickets) {
             const ticket = await linearClient.issue(ref);
             await ticket.update({
