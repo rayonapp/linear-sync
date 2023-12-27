@@ -28951,20 +28951,27 @@ async function run() {
             ...github.context.repo,
             branch: mainBranch
         });
-        console.log(JSON.stringify(mainBranchRes.data));
-        const toSha = mainBranchRes.data.commit.sha;
-        const pullRequests = await octokit.rest.pulls.list({
+        const toSha = // eslint-disable-next-line @typescript-eslint/no-explicit-any
+         mainBranchRes.data
+            ?.commit.sha;
+        const fromSha = latestRelease.data.target_commitish;
+        const commits = await octokit.rest.repos.compareCommits({
             ...github.context.repo,
-            base: toSha,
-            head: latestRelease.data.target_commitish,
-            state: 'closed'
+            base: fromSha,
+            head: toSha
         });
-        console.log(`${pullRequests.data.length} found`);
-        const linearTickets = (await Promise.all(pullRequests.data.map(async (pr) => {
-            console.log(`${pr.title} PR found`);
+        const prNumbers = commits.data.commits
+            .map(commit => {
+            const match = commit.commit.message.match(/Merge pull request #(\d+)/);
+            return match ? match[1] : null;
+        })
+            .filter(Boolean);
+        console.log(`${prNumbers.length} found`);
+        const linearTickets = (await Promise.all(prNumbers.map(async (prNumber) => {
+            console.log(`${prNumber} PR found`);
             const comments = await octokit.rest.issues.listComments({
                 ...github.context.repo,
-                issue_number: pr.number
+                issue_number: Number(prNumber)
             });
             const linearComment = comments.data.find(c => c.performed_via_github_app?.name === 'Linear');
             const ticket = linearComment?.body?.match(/\bRAY-\d+\b/);
