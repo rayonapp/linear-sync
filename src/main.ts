@@ -18,9 +18,8 @@ export async function run(): Promise<void> {
       branch: mainBranch
     })
 
-    console.log(JSON.stringify(mainBranchRes.data.commit))
     const toSha = // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (mainBranchRes.data as any[0] as unknown as typeof mainBranchRes.data)
+      ((mainBranchRes.data as any)[0] as unknown as typeof mainBranchRes.data)
         ?.commit.sha
 
     const fromSha = latestRelease.data.target_commitish

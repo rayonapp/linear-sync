@@ -28951,9 +28951,8 @@ async function run() {
             ...github.context.repo,
             branch: mainBranch
         });
-        console.log(JSON.stringify(mainBranchRes.data.commit));
         const toSha = // eslint-disable-next-line @typescript-eslint/no-explicit-any
-         mainBranchRes.data
+         mainBranchRes.data[0]
             ?.commit.sha;
         const fromSha = latestRelease.data.target_commitish;
         const commits = await octokit.rest.repos.compareCommits({
