@@ -56,7 +56,7 @@ export async function run(): Promise<void> {
     const labels = await linearClient.issueLabels({
       filter: { name: { eq: 'Releases' } }
     })
-    let parentId = labels.nodes[0].id
+    let parentId = labels.nodes[0]?.id
     if (!parentId) {
       console.log(`Releases label doesn't exist, creating it...`)
       parentId = (
