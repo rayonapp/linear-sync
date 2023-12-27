@@ -7,6 +7,8 @@ export async function run(): Promise<void> {
     const token: string = core.getInput('token')
     const apiKey: string = core.getInput('linearApiKey')
     const releaseLabelName: string = core.getInput('releaseLabel')
+    const baseBranch = core.getInput('baseBranch')
+    const maxPrLength = core.getInput('maxPrLength')
 
     const linearClient = new LinearClient({ apiKey })
 
@@ -21,11 +23,11 @@ export async function run(): Promise<void> {
     console.log('Getting pull requests...')
     const pullRequests = await octokit.rest.pulls.list({
       ...github.context.repo,
-      base: 'dev',
+      base: baseBranch,
       state: 'closed',
       sort: 'updated',
       direction: 'desc',
-      per_page: 100 // Adjust as needed
+      per_page: Number(maxPrLength)
     })
     const mergedPRs = pullRequests.data.filter(
       pr =>

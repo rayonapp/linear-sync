@@ -1,6 +1,6 @@
-name: 'The name of your action here'
-description: 'Provide a description here'
-author: 'Your name or organization here'
+name: 'Linear release sync'
+description: 'Add release label on linear tickets found in PRs merged in base branch since last release'
+author: 'Rayon'
 
 
 # Define your inputs here.
@@ -14,6 +14,14 @@ inputs:
   releaseLabel:
     description: 'Release label pu in linear'
     required: true
+  maxPrLength:
+    description: 'Maximum number of PRs fetch with the API'
+    required: false
+    default: '100'
+  baseBranch:
+    default: 'dev'
+    required: false
+    description: 'Main branch where PRs are merged'
 
 
 
