@@ -28940,38 +28940,29 @@ const core = __importStar(__nccwpck_require__(9093));
 const github = __importStar(__nccwpck_require__(5942));
 async function run() {
     try {
-        const mainBranch = core.getInput('mainBranch') ?? 'dev';
         const token = core.getInput('token');
         const octokit = github.getOctokit(token);
         const latestRelease = await octokit.rest.repos.getLatestRelease({
             ...github.context.repo
         });
         console.log('latest release', latestRelease.data.name);
-        const mainBranchRes = await octokit.rest.repos.getBranch({
+        // Fetch pull requests between the latest release and the latest commit on the main branch
+        const pullRequests = await octokit.rest.pulls.list({
             ...github.context.repo,
-            branch: mainBranch
+            base: 'main',
+            state: 'closed',
+            sort: 'updated',
+            direction: 'desc',
+            per_page: 100 // Adjust as needed
         });
-        const toSha = // eslint-disable-next-line @typescript-eslint/no-explicit-any
-         mainBranchRes.data[0]
-            ?.commit.sha;
-        const fromSha = latestRelease.data.target_commitish;
-        const commits = await octokit.rest.repos.compareCommits({
-            ...github.context.repo,
-            base: fromSha,
-            head: toSha
-        });
-        const prNumbers = commits.data.commits
-            .map(commit => {
-            const match = commit.commit.message.match(/Merge pull request #(\d+)/);
-            return match ? match[1] : null;
-        })
-            .filter(Boolean);
-        console.log(`${prNumbers.length} found`);
-        const linearTickets = (await Promise.all(prNumbers.map(async (prNumber) => {
-            console.log(`${prNumber} PR found`);
+        // Filter pull requests that were merged between the specified commits
+        const mergedPRs = pullRequests.data.filter(pr => pr.merged_at && pr.merged_at >= (latestRelease?.data?.published_at ?? 0));
+        console.log(`${mergedPRs.length} found`);
+        const linearTickets = (await Promise.all(mergedPRs.map(async (pr) => {
+            console.log(`${pr.title} PR found`);
             const comments = await octokit.rest.issues.listComments({
                 ...github.context.repo,
-                issue_number: Number(prNumber)
+                issue_number: Number(pr.number)
             });
             const linearComment = comments.data.find(c => c.performed_via_github_app?.name === 'Linear');
             const ticket = linearComment?.body?.match(/\bRAY-\d+\b/);
