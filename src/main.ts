@@ -6,6 +6,7 @@ export async function run(): Promise<void> {
   try {
     const token: string = core.getInput('token')
     const apiKey: string = core.getInput('linearApiKey')
+    const ticketPrefix: string = core.getInput('ticketPrefix')
     const releaseLabelName: string = core.getInput('releaseLabel')
     const baseBranch = core.getInput('baseBranch')
     const maxPrLength = core.getInput('maxPrLength')
@@ -47,7 +48,9 @@ export async function run(): Promise<void> {
           const linearComment = comments.data.find(
             c => c.performed_via_github_app?.name === 'Linear'
           )
-          const ticket = linearComment?.body?.match(/\bRAY-\d+\b/)
+          const ticket = linearComment?.body?.match(
+            new RegExp(`\b${ticketPrefix}-\d+\b`) // eslint-disable-line no-useless-escape
+          )
           if (ticket) {
             console.log(`Found ticket ${ticket}`)
           }
@@ -73,12 +76,15 @@ export async function run(): Promise<void> {
     const releaseLabel = await (
       await linearClient.createIssueLabel({ name: releaseLabelName, parentId })
     ).issueLabel
+    if (!releaseLabel) {
+      throw new Error('Cannot retrieve new version label')
+    }
     for (const ref of linearTickets) {
       try {
         console.log(`Updating ticket ${ref}`)
         const ticket = await linearClient.issue(ref)
         await ticket.update({
-          labelIds: [releaseLabel!.id, ...ticket.labelIds].filter(Boolean)
+          labelIds: [releaseLabel.id, ...ticket.labelIds].filter(Boolean)
         })
       } catch (e) {
         console.error(e)

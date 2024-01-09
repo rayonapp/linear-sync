@@ -1,13 +1,13 @@
 name: 'Linear release sync'
-description: 'Add release label on linear tickets found in PRs merged in base branch since last release'
+description: 'Add release on linear tickets in merged PRs since last release'
 author: 'Rayon'
 
 
-# Define your inputs here.
 inputs:
   token:
     description: 'Github token'
-    required: true
+    required: false
+    default: ${{ github.token }}
   linearApiKey:
     description: 'Linear API key'
     required: true
@@ -22,6 +22,10 @@ inputs:
     default: 'dev'
     required: false
     description: 'Main branch where PRs are merged'
+  ticketPrefix:
+    default: 'RAY'
+    required: false
+    description: 'Ticket prefix (can be a regex)'
 
 
 
