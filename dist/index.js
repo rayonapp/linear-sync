@@ -28953,7 +28953,10 @@ async function run() {
     try {
         const token = core.getInput('token');
         const apiKey = core.getInput('linearApiKey');
+        const ticketPrefix = core.getInput('ticketPrefix');
         const releaseLabelName = core.getInput('releaseLabel');
+        const baseBranch = core.getInput('baseBranch');
+        const maxPrLength = core.getInput('maxPrLength');
         const linearClient = new sdk_1.LinearClient({ apiKey });
         const octokit = github.getOctokit(token);
         console.log('Getting Latest release...');
@@ -28964,11 +28967,11 @@ async function run() {
         console.log('Getting pull requests...');
         const pullRequests = await octokit.rest.pulls.list({
             ...github.context.repo,
-            base: 'dev',
+            base: baseBranch,
             state: 'closed',
             sort: 'updated',
             direction: 'desc',
-            per_page: 100 // Adjust as needed
+            per_page: Number(maxPrLength)
         });
         const mergedPRs = pullRequests.data.filter(pr => pr.merged_at && pr.merged_at >= (latestRelease?.data?.published_at ?? 0));
         console.log(`${mergedPRs.length} merged since last release`);
@@ -28979,7 +28982,8 @@ async function run() {
                 issue_number: Number(pr.number)
             });
             const linearComment = comments.data.find(c => c.performed_via_github_app?.name === 'Linear');
-            const ticket = linearComment?.body?.match(/\bRAY-\d+\b/);
+            const ticket = linearComment?.body?.match(new RegExp(`\b${ticketPrefix}-\d+\b`) // eslint-disable-line no-useless-escape
+            );
             if (ticket) {
                 console.log(`Found ticket ${ticket}`);
             }
@@ -28996,6 +29000,9 @@ async function run() {
         }
         console.log('Creating new version label...');
         const releaseLabel = await (await linearClient.createIssueLabel({ name: releaseLabelName, parentId })).issueLabel;
+        if (!releaseLabel) {
+            throw new Error('Cannot retrieve new version label');
+        }
         for (const ref of linearTickets) {
             try {
                 console.log(`Updating ticket ${ref}`);

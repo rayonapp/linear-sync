@@ -1,7 +1,7 @@
 # Linear release sync
 
-Add release label on linear tickets found in PRs merged in base branch since last release
-
+Add release label on linear tickets found in PRs merged
+in base branch since last release
 
 ## Usage
 
@@ -13,4 +13,5 @@ Add release label on linear tickets found in PRs merged in base branch since las
             token: ${{ secrets.GITHUB_TOKEN }}
             linearApiKey: ${{ secrets.LINEAR_API_KEY }}
             releaseLabel: ${{ steps.bump-version.outputs.tag }}
+            ticketPrefix: RAY
 ```
