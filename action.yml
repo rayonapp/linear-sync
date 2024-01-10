@@ -1,0 +1,34 @@
+name: 'Linear release sync'
+description: 'Add release on linear tickets in merged PRs since last release'
+author: 'Rayon'
+
+
+inputs:
+  token:
+    description: 'Github token'
+    required: false
+    default: ${{ github.token }}
+  linearApiKey:
+    description: 'Linear API key'
+    required: true
+  releaseLabel:
+    description: 'Release label pu in linear'
+    required: true
+  maxPrLength:
+    description: 'Maximum number of PRs fetch with the API'
+    required: false
+    default: '100'
+  baseBranch:
+    default: 'dev'
+    required: false
+    description: 'Main branch where PRs are merged'
+  ticketPrefix:
+    default: 'RAY'
+    required: false
+    description: 'Ticket prefix (can be a regex)'
+
+
+
+runs:
+  using: node20
+  main: dist/index.js
