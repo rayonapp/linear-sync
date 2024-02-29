@@ -28957,6 +28957,7 @@ async function run() {
         const releaseLabelName = core.getInput('releaseLabel');
         const baseBranch = core.getInput('baseBranch');
         const maxPrLength = core.getInput('maxPrLength');
+        const stateId = core.getInput('stateId');
         const linearClient = new sdk_1.LinearClient({ apiKey });
         const octokit = github.getOctokit(token);
         console.log('Getting Latest release...');
@@ -29008,7 +29009,8 @@ async function run() {
                 console.log(`Updating ticket ${ref}`);
                 const ticket = await linearClient.issue(ref);
                 await ticket.update({
-                    labelIds: [releaseLabel.id, ...ticket.labelIds].filter(Boolean)
+                    labelIds: [releaseLabel.id, ...ticket.labelIds].filter(Boolean),
+                    stateId
                 });
             }
             catch (e) {
