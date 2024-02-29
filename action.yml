@@ -26,6 +26,10 @@ inputs:
     default: 'RAY'
     required: false
     description: 'Ticket prefix (can be a regex)'
+  stateId:
+    default: '2dd3bad8-0d14-4708-84ff-a2903d36857a'
+    required: false
+    description: 'If you want to update your ticket state'
 
 
 

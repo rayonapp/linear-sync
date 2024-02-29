@@ -10,6 +10,7 @@ export async function run(): Promise<void> {
     const releaseLabelName: string = core.getInput('releaseLabel')
     const baseBranch = core.getInput('baseBranch')
     const maxPrLength = core.getInput('maxPrLength')
+    const stateId = core.getInput('stateId')
 
     const linearClient = new LinearClient({ apiKey })
 
@@ -84,7 +85,8 @@ export async function run(): Promise<void> {
         console.log(`Updating ticket ${ref}`)
         const ticket = await linearClient.issue(ref)
         await ticket.update({
-          labelIds: [releaseLabel.id, ...ticket.labelIds].filter(Boolean)
+          labelIds: [releaseLabel.id, ...ticket.labelIds].filter(Boolean),
+          stateId
         })
       } catch (e) {
         console.error(e)
