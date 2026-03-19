@@ -60,36 +60,105 @@ export async function run(): Promise<void> {
       )
     ).filter((t): t is string => Boolean(t))
 
-    console.log('Getting Releases label')
-    const labels = await linearClient.issueLabels({
-      filter: { name: { eq: 'Releases' } }
-    })
-    let parentId = labels.nodes[0]?.id
-    if (!parentId) {
-      console.log(`Releases label doesn't exist, creating it...`)
-      parentId = (
-        await (
-          await linearClient.createIssueLabel({ name: 'Releases' })
-        ).issueLabel
-      )?.id as string
+    // Resolve the target state name from the provided stateId
+    let targetStateName: string | undefined
+    if (stateId) {
+      const targetState = await linearClient.workflowState(stateId)
+      targetStateName = targetState.name
+      console.log(`Target state name: "${targetStateName}"`)
     }
-    console.log('Creating new version label...')
-    const releaseLabel = await (
-      await linearClient.createIssueLabel({ name: releaseLabelName, parentId })
-    ).issueLabel
-    if (!releaseLabel) {
-      throw new Error('Cannot retrieve new version label')
-    }
-    for (const ref of linearTickets) {
-      try {
-        console.log(`Updating ticket ${ref}`)
+
+    // Group tickets by team
+    console.log('Fetching tickets and grouping by team...')
+    const ticketsWithTeams = await Promise.all(
+      linearTickets.map(async ref => {
         const ticket = await linearClient.issue(ref)
-        await ticket.update({
-          labelIds: [releaseLabel.id, ...ticket.labelIds].filter(Boolean),
-          stateId
+        const team = await ticket.team
+        return { ref, ticket, team }
+      })
+    )
+
+    const teamGroups = new Map<
+      string,
+      { team: NonNullable<(typeof ticketsWithTeams)[number]['team']>; entries: typeof ticketsWithTeams }
+    >()
+    for (const entry of ticketsWithTeams) {
+      if (!entry.team) {
+        console.warn(`Ticket ${entry.ref} has no team, skipping`)
+        continue
+      }
+      const existing = teamGroups.get(entry.team.id)
+      if (existing) {
+        existing.entries.push(entry)
+      } else {
+        teamGroups.set(entry.team.id, { team: entry.team, entries: [entry] })
+      }
+    }
+
+    console.log(`Found ${teamGroups.size} team(s) across ${linearTickets.length} ticket(s)`)
+
+    // Process each team
+    for (const [teamId, { team, entries }] of teamGroups) {
+      console.log(`Processing team "${team.name}" (${teamId}) with ${entries.length} ticket(s)`)
+
+      // Get or create "Releases" parent label for this team
+      const labels = await linearClient.issueLabels({
+        filter: { name: { eq: 'Releases' }, team: { id: { eq: teamId } } }
+      })
+      let parentId = labels.nodes[0]?.id
+      if (!parentId) {
+        console.log(`Releases label doesn't exist for team "${team.name}", creating it...`)
+        parentId = (
+          await (
+            await linearClient.createIssueLabel({ name: 'Releases', teamId })
+          ).issueLabel
+        )?.id as string
+      }
+
+      // Create release label for this team
+      console.log(`Creating release label "${releaseLabelName}" for team "${team.name}"...`)
+      const releaseLabel = await (
+        await linearClient.createIssueLabel({
+          name: releaseLabelName,
+          parentId,
+          teamId
         })
-      } catch (e) {
-        console.error(e)
+      ).issueLabel
+      if (!releaseLabel) {
+        console.error(`Cannot create release label for team "${team.name}", skipping`)
+        continue
+      }
+
+      // Resolve the equivalent stateId for this team
+      let teamStateId: string | undefined
+      if (targetStateName) {
+        const teamStates = await team.states()
+        const matchingState = teamStates.nodes.find(
+          s => s.name === targetStateName
+        )
+        if (matchingState) {
+          teamStateId = matchingState.id
+        } else {
+          console.warn(
+            `Team "${team.name}" has no state named "${targetStateName}", skipping state update for this team`
+          )
+        }
+      }
+
+      // Update tickets in this team
+      for (const { ref, ticket } of entries) {
+        try {
+          console.log(`Updating ticket ${ref}`)
+          const updatePayload: { labelIds: string[]; stateId?: string } = {
+            labelIds: [releaseLabel.id, ...ticket.labelIds].filter(Boolean)
+          }
+          if (teamStateId) {
+            updatePayload.stateId = teamStateId
+          }
+          await ticket.update(updatePayload)
+        } catch (e) {
+          console.error(e)
+        }
       }
     }
   } catch (error) {
